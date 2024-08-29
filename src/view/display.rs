@@ -21,7 +21,6 @@ impl<'a> Display<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::io;
 
     #[test]
     fn display_captures_writes() {
