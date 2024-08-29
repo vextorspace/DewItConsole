@@ -14,10 +14,39 @@ fn test_displays_empty_items_from_cloud_gives_title() {
     assert_eq!("Dew It!", display_lines[0]);
 }
 
+#[test]
+fn test_displays_list_with_pipe_separator() {
+    let item1_text = "Item 1";
+    let item2_text = "Item 2";
+    let item_names = vec!(item1_text, item2_text);
+
+    let model = make_model(item_names);
+
+    let display_lines = display_and_capture_output(model);
+
+    assert_eq!(2, display_lines.len());
+
+    let index = display_lines[1].find("|");
+    assert!(index.is_some());
+    let first = &display_lines[1][..index.unwrap()];
+    let second = &display_lines[1][index.unwrap() + 1..];
+    assert_eq!(item1_text, first.trim());
+    assert_eq!(item2_text, second.trim());
+}
+
+fn make_model(item_names: Vec<&str>) -> Model {
+    let items = item_names.iter().map(|name| ViewItem::new(name.to_string())).collect();
+
+    let model_updater: Box<dyn ModelUpdater> = Box::new(FakeModelUpdater::new(items));
+    let model = model_updater.get_model();
+    model
+}
+
 fn display_and_capture_output(model: Model) -> Vec<String> {
     let mut buffer: Vec<u8> = Vec::new();
     let mut display = Display::new(&mut buffer);
-    display.initialize(&model);
+
+    display.initialize(&model).unwrap();
 
     String::from_utf8_lossy(&buffer)
         .lines()

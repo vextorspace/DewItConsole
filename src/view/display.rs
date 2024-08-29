@@ -1,16 +1,29 @@
 use crate::model::Model;
-use std::io::Write;
+use std::io;
 
 pub struct Display<'a> {
-    writer: &'a mut dyn Write,
+    writer: &'a mut dyn io::Write,
 }
 
 impl<'a> Display<'a> {
-    pub fn initialize(&mut self, model: &Model) {
-        writeln!(self.writer, "Dew It!").unwrap();
+    pub fn initialize(&mut self, model: &Model) -> Result<(), io::Error> {
+        writeln!(self.writer, "Dew It!")?;
+
+        let loop_size = model.items.len();
+
+        for (index, item) in model.items.iter().enumerate() {
+            write!(self.writer, "{}", item.name)?;
+            if index < loop_size - 1 {
+                write!(self.writer, " | ")?;
+            } else {
+                writeln!(self.writer)?;
+            }
+        }
+
+        Ok(())
     }
 
-    pub fn new(console: &'a mut dyn Write) -> Display {
+    pub fn new(console: &'a mut dyn io::Write) -> Display {
         Display {
             writer: console,
         }
@@ -31,7 +44,7 @@ mod tests {
         let mut buffer: Vec<u8> = Vec::new();
         let mut display = Display::new(&mut buffer);
 
-        display.initialize(&model);
+        display.initialize(&model).unwrap();
 
         let expected = "Dew It!\n";
         assert_eq!(expected.to_string(), String::from_utf8_lossy(&buffer))
