@@ -1,14 +1,27 @@
 use crate::model::Model;
 use std::io;
+use std::io::Error;
 
 pub struct Display<'a> {
     writer: &'a mut dyn io::Write,
 }
 
 impl<'a> Display<'a> {
+    pub fn new(console: &'a mut dyn io::Write) -> Display {
+        Display {
+            writer: console,
+        }
+    }
+
     pub fn initialize(&mut self, model: &Model) -> Result<(), io::Error> {
         writeln!(self.writer, "Dew It!")?;
 
+        self.write_items_to_display(model)?;
+
+        Ok(())
+    }
+
+    fn write_items_to_display(&mut self, model: &Model) -> Result<(), Error> {
         let loop_size = model.items.len();
 
         for (index, item) in model.items.iter().enumerate() {
@@ -19,16 +32,8 @@ impl<'a> Display<'a> {
                 writeln!(self.writer)?;
             }
         }
-
         Ok(())
     }
-
-    pub fn new(console: &'a mut dyn io::Write) -> Display {
-        Display {
-            writer: console,
-        }
-    }
-
 }
 
 #[cfg(test)]
