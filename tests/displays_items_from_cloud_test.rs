@@ -26,41 +26,42 @@ fn test_displays_list_with_pipe_separator() {
 
     assert_eq!(2, display_lines.len());
 
-    let index = display_lines[1].find("|");
-    assert!(index.is_some());
-    let first = &display_lines[1][..index.unwrap()];
-    let second = &display_lines[1][index.unwrap() + 1..];
-    assert_eq!(item1_text, first.trim());
-    assert_eq!(item2_text, second.trim());
+    validate_main_item_line(item1_text, item2_text, &display_lines);
 }
 
 #[test]
 fn test_displays_list_with_sub_items() {
     let item1_text = "Item 1";
     let item2_text = "Item 2";
-    let item3_text = "Item 3";
     let mut item1 = ViewItem::new(item1_text.to_string());
     let item2 = ViewItem::new(item2_text.to_string());
+    let items = vec!(item1, item2);
+    let model = Model::new(items);
+
+    let item3_text = "Item 3";
     let item3 = ViewItem::new(item3_text.to_string());
     item1.add_sub_item(item3);
-    let items = vec!(item1, item2);
 
-    let model = Model::new(items);
+
 
     let display_lines = display_and_capture_output(model);
 
     assert_eq!(3, display_lines.len());
 
+    validate_main_item_line(item1_text, item2_text, &display_lines);
+
+    let index = display_lines[2].find("|");
+    assert_eq!(None, index);
+    assert_eq!(item3_text, display_lines[2].trim());
+}
+
+fn validate_main_item_line(item1_text: &str, item2_text: &str, display_lines: &Vec<String>) {
     let index = display_lines[1].find("|");
     assert!(index.is_some());
     let first = &display_lines[1][..index.unwrap()];
     let second = &display_lines[1][index.unwrap() + 1..];
     assert_eq!(item1_text, first.trim());
     assert_eq!(item2_text, second.trim());
-
-    let index = display_lines[2].find("|");
-    assert_eq!(None, index);
-    assert_eq!(item3_text, display_lines[2].trim());
 }
 
 fn make_model(item_names: Vec<&str>) -> Model {
