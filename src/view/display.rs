@@ -26,11 +26,16 @@ impl<'a> Display<'a> {
 
         for (index, item) in model.items.iter().enumerate() {
             write!(self.writer, "{}", item.name)?;
-            if index < loop_size - 1 {
-                write!(self.writer, " | ")?;
-            } else {
-                writeln!(self.writer)?;
-            }
+            self.append_item_ending(loop_size, index)?;
+        }
+        Ok(())
+    }
+
+    fn append_item_ending(&mut self, loop_size: usize, index: usize) -> Result<(), Error> {
+        if index < loop_size - 1 {
+            write!(self.writer, " | ")?;
+        } else {
+            writeln!(self.writer)?;
         }
         Ok(())
     }
