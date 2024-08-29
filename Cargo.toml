@@ -1,0 +1,9 @@
+[package]
+name = "dew_it_console"
+version = "0.1.0"
+edition = "2021"
+authors = ["Douglas Ronne <vextorspace@gmail.com>"]
+
+[dependencies]
+crossterm = "0.28.1"
+
