@@ -6,4 +6,4 @@ authors = ["Douglas Ronne <vextorspace@gmail.com>"]
 
 [dependencies]
 crossterm = "0.28.1"
-
+uuid = { version = "1.10.0", features = ["v4"] }
