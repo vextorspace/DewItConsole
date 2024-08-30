@@ -25,4 +25,12 @@ mod tests {
 
         assert_eq!(vec!(item1, item2), model.items);
     }
+
+    #[test]
+    fn model_can_have_no_items() {
+        let items = vec!();
+        let model = Model::new(items);
+
+        assert_eq!(0, model.items.len());
+    }
 }
