@@ -35,13 +35,13 @@ fn test_displays_list_with_sub_items() {
     let item2_text = "Item 2";
     let mut item1 = ViewItem::new(item1_text.to_string());
     let item2 = ViewItem::new(item2_text.to_string());
-    let items = vec!(item1, item2);
-    let model = Model::new(items);
 
     let item3_text = "Item 3";
     let item3 = ViewItem::new(item3_text.to_string());
     item1.add_sub_item(item3);
 
+    let items = vec!(item1, item2);
+    let model = Model::new(items);
 
 
     let display_lines = display_and_capture_output(model);
@@ -97,7 +97,7 @@ impl FakeModelUpdater {
 }
 
 impl ModelUpdater for FakeModelUpdater {
-    fn get_model<'a>(&'a self) -> Model {
+    fn get_model(&self) -> Model {
         Model {
             items: self.items.clone(),
         }
