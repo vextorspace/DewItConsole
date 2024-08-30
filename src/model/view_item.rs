@@ -40,4 +40,12 @@ mod tests {
 
         assert_eq!(vec!(item2), item1.sub_items)
     }
+
+    #[test]
+    fn view_item_equal_if_cloned() {
+        let item1 = ViewItem::new("Item 1".to_string());
+        let item2 = item1.clone();
+
+        assert_eq!(item1, item2)
+    }
 }
