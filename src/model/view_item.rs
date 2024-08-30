@@ -8,12 +8,6 @@ pub struct ViewItem {
 }
 
 impl ViewItem {
-    pub fn add_sub_item(&mut self, item_to_add: ViewItem) {
-        self.sub_items.push(item_to_add)
-    }
-}
-
-impl ViewItem {
     pub fn new(name: String) -> ViewItem {
         ViewItem {
             name: name.to_string(),
@@ -27,6 +21,18 @@ impl ViewItem {
             name: name.to_string(),
             sub_items: vec!(),
             id,
+        }
+    }
+
+    pub fn add_sub_item(&mut self, item_to_add: ViewItem) {
+        self.sub_items.push(item_to_add)
+    }
+
+    pub fn find_by_id(&self, id_to_find: &String) -> Option<&ViewItem> {
+        if(self.id == *id_to_find) {
+            Some(self)
+        } else {
+            None
         }
     }
 }
@@ -76,5 +82,13 @@ mod tests {
         let item3 = ViewItem::with_id("Other Text".to_string(), id.clone());
         assert_ne!(item1, item2);
         assert_eq!(item2, item3);
+    }
+    
+    #[test]
+    fn view_item_finds_self_by_id() {
+        let item = ViewItem::new("::ANY OLD ITEM::".to_string());
+        let result = item.find_by_id(&item.id);
+        
+        assert_eq!(item, *result.unwrap())
     }
 }
