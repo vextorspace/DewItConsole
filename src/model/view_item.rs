@@ -42,6 +42,22 @@ impl ViewItem {
             .find(|item| item.is_some())
             .flatten()
     }
+
+    pub fn find_level(&self, item_to_find: &ViewItem) -> Option<usize> {
+        if self == item_to_find {
+            Some(0)
+        } else if self.sub_items.is_empty() {
+            None
+        } else {
+            match self.sub_items.iter()
+                .map(|child| child.find_level(item_to_find))
+                .find(|result| result.is_some())
+                .flatten() {
+                Some(sub_level) => Some(sub_level+1),
+                None => None,
+            }
+        }
+    }
 }
 
 impl PartialEq for ViewItem {
@@ -109,5 +125,49 @@ mod tests {
 
         let result = item1.find_by_id(&child2.id);
         assert_eq!(child2, *result.unwrap())
+    }
+
+
+
+    #[test]
+    fn finds_sub_level_for_self() {
+        let item = ViewItem::new("::ANY::".to_string());
+
+        let level = item.find_level(&item);
+
+        assert_eq!(Some(0), level);
+    }
+
+    #[test]
+    fn finds_sub_level_none_if_not_there() {
+        let item = ViewItem::new("::ANY::".to_string());
+        let missing_item = ViewItem::new("::OTHER::".to_string());
+
+
+        let level = item.find_level(&missing_item);
+
+        assert_eq!(None, level);
+    }
+
+    #[test]
+    fn finds_sub_level_for_sub_item() {
+        let mut item = ViewItem::new("::ANY::".to_string());
+        let mut child = ViewItem::new("::ANY::".to_string());
+        let grandchild = ViewItem::new("::ANY::".to_string());
+
+        child.add_sub_item(grandchild.clone());
+        item.add_sub_item(child.clone());
+
+        let mut level = item.find_level(&child);
+
+        assert_eq!(Some(1), level);
+
+        level = item.find_level(&grandchild);
+
+        assert_eq!(Some(2), level);
+
+        level = child.find_level(&grandchild);
+
+        assert_eq!(Some(1), level);
     }
 }

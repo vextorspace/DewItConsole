@@ -16,11 +16,7 @@ impl<'a> Column<'a> {
     }
 
     pub fn find_level(&self, view_item: &ViewItem) -> Option<usize> {
-        if self.top_item == view_item {
-            Some(0)
-        } else {
-            None
-        }
+        self.top_item.find_level(view_item)
     }
 
     pub fn format_sub_item(view_item: ViewItem, level: usize) -> String {
@@ -161,6 +157,26 @@ mod tests {
         let level = column.find_level(&missing_item);
 
         assert_eq!(None, level);
+    }
+
+    #[test]
+    fn finds_sub_level_for_sub_item() {
+        let mut item = ViewItem::new("::ANY::".to_string());
+        let mut child = ViewItem::new("::ANY::".to_string());
+        let grandchild = ViewItem::new("::ANY::".to_string());
+
+        child.add_sub_item(grandchild.clone());
+        item.add_sub_item(child.clone());
+
+        let mut column = Column::new(&item, 0);
+        let mut level = column.find_level(&child);
+
+        assert_eq!(Some(1), level);
+
+        column = Column::new(&item, 0);
+        level = column.find_level(&grandchild);
+
+        assert_eq!(Some(2), level);
     }
 }
 
