@@ -40,6 +40,12 @@ impl<'a> Display<'a> {
         Ok(())
     }
 
+    pub fn format_sub_item(view_item: ViewItem, level: i32) -> String {
+        let mut formatted = String::from(Self::indent(level));
+        formatted.push_str(&view_item.name);
+        formatted
+    }
+
     pub fn find_width(item: &ViewItem) -> usize {
         if item.name.len() > Display::MAX_COLUMN_WIDTH {
             Display::MAX_COLUMN_WIDTH
@@ -156,5 +162,14 @@ mod tests {
     fn indent_level_3() {
         let indent = Display::indent(3);
         assert_eq!("       - ".to_string(), indent)
+    }
+
+    #[test]
+    fn sub_item_displayed_with_indent() {
+        let item = ViewItem::new("::SUB_ITEM OF MEDIUM LENGTH::".to_string());
+
+        let sub_item_formatted = Display::format_sub_item(item.clone(), 3);
+
+        assert_eq!(format!("       - {}", item.name), sub_item_formatted);
     }
 }
