@@ -1,4 +1,4 @@
-use crate::model::Model;
+use crate::model::{Model, ViewItem};
 use std::io;
 use std::io::Error;
 
@@ -33,16 +33,31 @@ impl<'a> Display<'a> {
 
     fn append_item_ending(&mut self, loop_size: usize, index: usize) -> Result<(), Error> {
         if index < loop_size - 1 {
-            write!(self.writer, " | ")?;
+            write!(self.writer, "{}", Display::PADDING)?;
         } else {
             writeln!(self.writer)?;
         }
         Ok(())
     }
+
+    pub fn find_width(item: &ViewItem) -> usize {
+        if item.name.len() > Display::MAX_COLUMN_WIDTH {
+            Display::MAX_COLUMN_WIDTH
+        } else if item.name.len() < Display::MIN_COLUMN_WIDTH {
+            Display::MIN_COLUMN_WIDTH
+        } else {
+            item.name.len() + Display::PADDING.len()
+        }
+    }
+
+    pub const MIN_COLUMN_WIDTH: usize = 10;
+    pub const MAX_COLUMN_WIDTH: usize = 30;
+    pub const PADDING: &'static str = " | ";
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::model::ViewItem;
     use super::*;
 
     #[test]
@@ -58,5 +73,36 @@ mod tests {
 
         let expected = "Dew It!\n";
         assert_eq!(expected.to_string(), String::from_utf8_lossy(&buffer))
+    }
+
+
+    #[test]
+    fn display_determines_width_of_tiny_column_to_be_min() {
+        let item1 = ViewItem::new("I1".to_string());
+        let model = Model::new(vec!(item1.clone()));
+
+        let column_width = Display::find_width(&item1);
+
+        assert_eq!(Display::MIN_COLUMN_WIDTH, column_width);
+    }
+
+    #[test]
+    fn model_determines_width_of_huge_column_to_be_max() {
+        let item1 = ViewItem::new("::ITEM WITH A REALLY LONG NAME THAT IS LONGER THAN THE MAX COLUMN WIDTH::".to_string());
+        let model = Model::new(vec!(item1.clone()));
+
+        let column_width = Display::find_width(&item1);
+
+        assert_eq!(Display::MAX_COLUMN_WIDTH, column_width);
+    }
+
+    #[test]
+    fn model_determines_width_to_be_length_plus_padding() {
+        let item1 = ViewItem::new("::ITEM WITH MEDIUM LENGTH::".to_string());
+        let model = Model::new(vec!(item1.clone()));
+
+        let column_width = Display::find_width(&item1);
+
+        assert_eq!(item1.name.len()+Display::PADDING.len(), column_width);
     }
 }
