@@ -50,6 +50,10 @@ impl<'a> Display<'a> {
         }
     }
 
+    pub fn indent(level: i32) -> String {
+        String::from("")
+    }
+
     pub const MIN_COLUMN_WIDTH: usize = 10;
     pub const MAX_COLUMN_WIDTH: usize = 30;
     pub const PADDING: &'static str = " | ";
@@ -79,7 +83,6 @@ mod tests {
     #[test]
     fn display_determines_width_of_tiny_column_to_be_min() {
         let item1 = ViewItem::new("I1".to_string());
-        let model = Model::new(vec!(item1.clone()));
 
         let column_width = Display::find_width(&item1);
 
@@ -87,9 +90,8 @@ mod tests {
     }
 
     #[test]
-    fn model_determines_width_of_huge_column_to_be_max() {
+    fn display_determines_width_of_huge_column_to_be_max() {
         let item1 = ViewItem::new("::ITEM WITH A REALLY LONG NAME THAT IS LONGER THAN THE MAX COLUMN WIDTH::".to_string());
-        let model = Model::new(vec!(item1.clone()));
 
         let column_width = Display::find_width(&item1);
 
@@ -97,12 +99,31 @@ mod tests {
     }
 
     #[test]
-    fn model_determines_width_to_be_length_plus_padding() {
+    fn display_determines_width_to_be_length_plus_padding() {
         let item1 = ViewItem::new("::ITEM WITH MEDIUM LENGTH::".to_string());
-        let model = Model::new(vec!(item1.clone()));
 
         let column_width = Display::find_width(&item1);
 
-        assert_eq!(item1.name.len()+Display::PADDING.len(), column_width);
+        let expected_width = item1.name.len() + Display::PADDING.len();
+        assert_eq!(expected_width, column_width);
+    }
+
+    #[test]
+    fn determines_width_to_increase_by_indent_per_level() {
+        let mut item1 = ViewItem::new("::ITEM 1 WITH MEDIUM LENGTH::".to_string());
+        let mut item2 = ViewItem::new("::ITEM 2 WITH MEDIUM LENGTH::".to_string());
+        let item3 = ViewItem::new("::ITEM 3 WITH MEDIUM LENGTH::".to_string());
+
+        item2.add_sub_item(item3);
+        item1.add_sub_item(item2);
+
+
+        let column_width = Display::find_width(&item1);
+
+        let expected_width =
+            Display::indent(2).len()
+            + item1.name.len()
+            + Display::PADDING.len();
+        assert_eq!(expected_width, column_width);
     }
 }
