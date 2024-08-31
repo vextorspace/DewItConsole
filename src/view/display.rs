@@ -126,4 +126,11 @@ mod tests {
             + Display::PADDING.len();
         assert_eq!(expected_width, column_width);
     }
+
+    #[test]
+    fn indent_empty_for_zero_level() {
+        let indent = Display::indent(0);
+
+        assert_eq!("".to_string(), indent)
+    }
 }
