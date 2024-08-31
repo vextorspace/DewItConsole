@@ -1,3 +1,4 @@
+use std::vec::IntoIter;
 use uuid::Uuid;
 
 #[derive(Debug, Clone)]
@@ -58,6 +59,14 @@ impl ViewItem {
             }
         }
     }
+
+    pub fn flatten(&self) -> Vec<&ViewItem> {
+        let mut items = vec!(self);
+        for item in self.sub_items.iter() {
+            items.extend(item.flatten());
+        }
+        items
+    }
 }
 
 impl PartialEq for ViewItem {
@@ -67,6 +76,35 @@ impl PartialEq for ViewItem {
 }
 
 impl Eq for ViewItem {}
+
+struct ViewItemIter<'a> {
+    collection: &'a ViewItem,
+    index: usize,
+}
+
+impl<'a> Iterator for ViewItemIter<'a> {
+    type Item = &'a ViewItem;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.index < self.collection.sub_items.len() {
+            let item = &self.collection.sub_items[self.index];
+            self.index += 1;
+            Some(item)
+        } else {
+            None
+        }
+    }
+}
+
+impl ViewItem {
+    pub fn iter(&self) -> IntoIter<&ViewItem> {
+        let iter = ViewItemIter {
+            collection: self,
+            index: 0,
+        };
+        iter.collect::<Vec<&ViewItem>>().into_iter()
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -169,5 +207,40 @@ mod tests {
         level = child.find_level(&grandchild);
 
         assert_eq!(Some(1), level);
+    }
+
+    #[test]
+    fn can_iterate() {
+        let mut item = ViewItem::new("Item 1".to_string());
+        let mut child1 = ViewItem::new("Child 1".to_string());
+        let child2 = ViewItem::new("Child 2".to_string());
+        let grandchild = ViewItem::new("Grandchild".to_string());
+
+        child1.add_sub_item(grandchild.clone());
+        item.add_sub_item(child1.clone());
+        item.add_sub_item(child2.clone());
+
+        let mut iter = item.iter();
+
+
+        assert_eq!(Some(&child1), iter.next());
+        assert_eq!(Some(&child2), iter.next());
+        assert_eq!(None, iter.next());
+    }
+
+    #[test]
+    fn can_flatten() {
+        let mut item = ViewItem::new("Item 1".to_string());
+        let mut child1 = ViewItem::new("Child 1".to_string());
+        let child2 = ViewItem::new("Child 2".to_string());
+        let grandchild = ViewItem::new("Grandchild".to_string());
+
+        child1.add_sub_item(grandchild.clone());
+        item.add_sub_item(child1.clone());
+        item.add_sub_item(child2.clone());
+
+        let flat_items : Vec<&ViewItem> = item.flatten();
+
+        assert_eq!(vec!(&item, &child1, &grandchild, &child2), flat_items);
     }
 }

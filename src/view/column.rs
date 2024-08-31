@@ -5,8 +5,6 @@ pub struct Column<'a> {
     pub index: usize,
 }
 
-
-
 impl<'a> Column<'a> {
     pub fn new(top_item: &ViewItem, index: usize) -> Column {
         Column {
@@ -23,6 +21,19 @@ impl<'a> Column<'a> {
         let mut formatted = String::from(Self::indent(level));
         formatted.push_str(&view_item.name);
         formatted
+    }
+
+    pub fn find_total_width(&self) -> usize {
+        let mut max_width = 0;
+
+        for item in self.iter() {
+            let level = self.find_level(item).unwrap();
+            let width = Column::find_width(item, level);
+            if width > max_width {
+                max_width = width;
+            }
+        }
+        max_width
     }
 
     pub fn find_width(item: &ViewItem, level: usize) -> usize {
@@ -48,11 +59,41 @@ impl<'a> Column<'a> {
             indent.push_str(" - ");
             indent
         }
-    }    
+    }
+
     pub const MIN_COLUMN_WIDTH: usize = 10;
     pub const MAX_COLUMN_WIDTH: usize = 30;
     pub const PADDING: &'static str = " | ";
 }
+
+struct ColumnIter<'a> {
+    collection: Vec<&'a ViewItem>,
+    index: usize,
+}
+
+impl<'a> Iterator for ColumnIter<'a> {
+    type Item = &'a ViewItem;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.index < self.collection.len() {
+            let item = &self.collection[self.index];
+            self.index += 1;
+            Some(item)
+        } else {
+            None
+        }
+    }
+}
+
+impl<'a> Column<'a> {
+    pub fn iter(&self) -> ColumnIter {
+        ColumnIter {
+            collection: self.top_item.flatten(),
+            index: 0,
+        }
+    }
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -65,6 +106,25 @@ mod tests {
         let column_width = Column::find_width(&item1, 0);
 
         assert_eq!(Column::MIN_COLUMN_WIDTH, column_width);
+    }
+
+    #[test]
+    fn iterates_over_all_levels() {
+        let mut item = ViewItem::new("::ANY::".to_string());
+        let mut child1 = ViewItem::new("::ANY::".to_string());
+        let grandchild = ViewItem::new("::ANY::".to_string());
+        let child2 = ViewItem::new("::ANY::".to_string());
+        child1.add_sub_item(grandchild.clone());
+        item.add_sub_item(child1.clone());
+        item.add_sub_item(child2.clone());
+        let column = Column::new(&item, 0);
+
+        let mut items = column.iter();
+        assert_eq!(Some(&item), items.next());
+        assert_eq!(Some(&child1), items.next());
+        assert_eq!(Some(&grandchild), items.next());
+        assert_eq!(Some(&child2), items.next());
+        assert_eq!(None, items.next());
     }
 
     #[test]
@@ -88,14 +148,9 @@ mod tests {
 
     #[test]
     fn determines_width_to_increase_by_indent_per_level() {
-        let mut item1 = ViewItem::new("::ITEM 1 WITH MEDIUM LENGTH::".to_string());
-        let mut item2 = ViewItem::new("::ITEM 2 WITH MEDIUM LENGTH::".to_string());
-        let item3 = ViewItem::new("::ITEM 3 WITH MEDIUM LENGTH::".to_string());
-
-        item2.add_sub_item(item3.clone());
-        item1.add_sub_item(item2);
-
+        let (item1, item2, item3) = setup_3_entry_column();
         let column = Column::new(&item1, 0);
+
         let level = column.find_level(&item3).unwrap();
         let column_width = Column::find_width(&item3, level);
 
@@ -104,6 +159,35 @@ mod tests {
                 + item1.name.len()
                 + Column::PADDING.len();
         assert_eq!(expected_width, column_width);
+    }
+
+    #[test]
+    fn determine_column_width_as_max_entry_width() {
+        let (item1, item2, item3) = setup_3_entry_column();
+        let column = Column::new(&item1, 0);
+
+        let column_width = column.find_total_width();
+        let expected_width = calculate_max_width_of_items(&item1, &item2, &item3, column);
+        assert_eq!(expected_width, column_width);
+    }
+
+    fn calculate_max_width_of_items(item1: &ViewItem, item2: &ViewItem, item3: &ViewItem, column: Column) -> usize {
+        let widths = vec!(Column::find_width(&item1, column.find_level(&item1).unwrap()),
+                          Column::find_width(&item2, column.find_level(&item2).unwrap()),
+                          Column::find_width(&item3, column.find_level(&item3).unwrap()));
+        let expected_width = *widths.iter().max().unwrap();
+        expected_width
+    }
+
+    fn setup_3_entry_column() -> (ViewItem, ViewItem, ViewItem) {
+        let mut item1 = ViewItem::new("::ITEM 1 WITH MEDIUM LENGTH::".to_string());
+        let mut item2 = ViewItem::new("::ITEM 2 WITH MEDIUM LENGTH::".to_string());
+        let item3 = ViewItem::new("::ITEM 3 WITH MEDIUM LENGTH::".to_string());
+
+        item2.add_sub_item(item3.clone());
+        item1.add_sub_item(item2.clone());
+
+        (item1, item2, item3)
     }
 
 
