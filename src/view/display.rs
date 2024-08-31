@@ -51,7 +51,18 @@ impl<'a> Display<'a> {
     }
 
     pub fn indent(level: i32) -> String {
-        String::from("")
+        if level == 0 {
+            String::from("")
+        } else if level == 1 {
+            String::from(" - ")
+        } else {
+            let mut indent = String::new();
+            for _ in 0 .. (level-1) {
+                indent.push_str("   ");
+            }
+            indent.push_str(" - ");
+            indent
+        }
     }
 
     pub const MIN_COLUMN_WIDTH: usize = 10;
@@ -131,6 +142,19 @@ mod tests {
     fn indent_empty_for_zero_level() {
         let indent = Display::indent(0);
 
-        assert_eq!("".to_string(), indent)
+        assert_eq!("".to_string(), indent);
+    }
+
+    #[test]
+    fn indent_level_1() {
+        let indent = Display::indent(1);
+
+        assert_eq!(" - ".to_string(), indent);
+    }
+
+    #[test]
+    fn indent_level_3() {
+        let indent = Display::indent(3);
+        assert_eq!("       - ".to_string(), indent)
     }
 }
