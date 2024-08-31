@@ -16,7 +16,11 @@ impl<'a> Column<'a> {
     }
 
     pub fn find_level(&self, view_item: &ViewItem) -> Option<usize> {
-        Some(0)
+        if self.top_item == view_item {
+            Some(0)
+        } else {
+            None
+        }
     }
 
     pub fn format_sub_item(view_item: ViewItem, level: usize) -> String {
@@ -145,6 +149,18 @@ mod tests {
         let level = column.find_level(&item);
 
         assert_eq!(Some(0), level);
+    }
+
+    #[test]
+    fn finds_sub_level_none_if_not_there() {
+        let item1 = ViewItem::new("::ANY::".to_string());
+        let missing_item = ViewItem::new("::OTHER::".to_string());
+
+        let column = Column::new(&item1, 0);
+
+        let level = column.find_level(&missing_item);
+
+        assert_eq!(None, level);
     }
 }
 
