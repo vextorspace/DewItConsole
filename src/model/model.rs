@@ -18,10 +18,15 @@ impl Model {
             .flatten()
     }
     pub fn find_width(&self, item: &ViewItem) -> u32 {
-        Model::MIN_COLUMN_WIDTH
+        if(item.name.len() as u32) > Model::MAX_COLUMN_WIDTH {
+            Model::MAX_COLUMN_WIDTH
+        } else {
+            Model::MIN_COLUMN_WIDTH
+        }
     }
 
     pub const MIN_COLUMN_WIDTH: u32 = 10;
+    pub const MAX_COLUMN_WIDTH: u32 = 30;
 }
 
 #[cfg(test)]
@@ -76,5 +81,15 @@ mod tests {
         let column_width = model.find_width(&item1);
 
         assert_eq!(Model::MIN_COLUMN_WIDTH, column_width);
+    }
+
+    #[test]
+    fn model_determines_width_of_huge_column_to_be_max() {
+        let item1 = ViewItem::new("::ITEM WITH A REALLY LONG NAME THAT IS LONGER THAN THE MAX COLUMN WIDTH::".to_string());
+        let model = Model::new(vec!(item1.clone()));
+
+        let column_width = model.find_width(&item1);
+
+        assert_eq!(Model::MAX_COLUMN_WIDTH, column_width);
     }
 }
