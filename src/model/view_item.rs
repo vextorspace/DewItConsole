@@ -29,11 +29,18 @@ impl ViewItem {
     }
 
     pub fn find_by_id(&self, id_to_find: &String) -> Option<&ViewItem> {
-        if(self.id == *id_to_find) {
+        if self.id == *id_to_find {
             Some(self)
         } else {
-            None
+            self.find_in_sub_items(id_to_find)
         }
+    }
+
+    fn find_in_sub_items(&self, id_to_find: &String) -> Option<&ViewItem> {
+        self.sub_items.iter()
+            .map(|item| item.find_by_id(id_to_find))
+            .find(|item| item.is_some())
+            .flatten()
     }
 }
 
@@ -90,5 +97,17 @@ mod tests {
         let result = item.find_by_id(&item.id);
         
         assert_eq!(item, *result.unwrap())
+    }
+
+    #[test]
+    fn view_item_finds_second_child_by_id() {
+        let mut item1 = ViewItem::new("::ANY OLD ITEM::".to_string());
+        let child1 = ViewItem::new("::CHILD 1::".to_string());
+        let child2 = ViewItem::new("::CHILD 2::".to_string());
+        item1.add_sub_item(child1.clone());
+        item1.add_sub_item(child2.clone());
+
+        let result = item1.find_by_id(&child2.id);
+        assert_eq!(child2, *result.unwrap())
     }
 }
