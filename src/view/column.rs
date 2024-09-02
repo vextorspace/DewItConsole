@@ -28,22 +28,12 @@ impl<'a> Column<'a> {
 
         for item in self.iter() {
             let level = self.find_level(item).unwrap();
-            let width = Column::find_width(item, level);
+            let width = item.find_width(level);
             if width > max_width {
                 max_width = width;
             }
         }
         max_width
-    }
-
-    pub fn find_width(item: &ViewItem, level: usize) -> usize {
-        if item.name.len() > Column::MAX_COLUMN_WIDTH {
-            Column::MAX_COLUMN_WIDTH
-        } else if item.name.len() < Column::MIN_COLUMN_WIDTH {
-            Column::MIN_COLUMN_WIDTH
-        } else {
-            Column::indent(level).len() + item.name.len() + Column::PADDING.len()
-        }
     }
 
     pub fn indent(level: usize) -> String {
@@ -73,15 +63,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn determines_width_of_tiny_column_to_be_min() {
-        let item1 = ViewItem::new("I1".to_string());
-
-        let column_width = Column::find_width(&item1, 0);
-
-        assert_eq!(Column::MIN_COLUMN_WIDTH, column_width);
-    }
-
-    #[test]
     fn iterates_over_all_levels() {
         let mut item = ViewItem::new("::ANY::".to_string());
         let mut child1 = ViewItem::new("::ANY::".to_string());
@@ -100,39 +81,6 @@ mod tests {
         assert_eq!(None, items.next());
     }
 
-    #[test]
-    fn determines_width_of_huge_column_to_be_max() {
-        let item1 = ViewItem::new("::ITEM WITH A REALLY LONG NAME THAT IS LONGER THAN THE MAX COLUMN WIDTH::".to_string());
-
-        let column_width = Column::find_width(&item1, 0);
-
-        assert_eq!(Column::MAX_COLUMN_WIDTH, column_width);
-    }
-
-    #[test]
-    fn determines_width_to_be_length_plus_padding() {
-        let item1 = ViewItem::new("::ITEM WITH MEDIUM LENGTH::".to_string());
-
-        let column_width = Column::find_width(&item1, 0);
-
-        let expected_width = item1.name.len() + Column::PADDING.len();
-        assert_eq!(expected_width, column_width);
-    }
-
-    #[test]
-    fn determines_width_to_increase_by_indent_per_level() {
-        let (item1, item2, item3) = setup_3_entry_column();
-        let column = Column::new(&item1, 0);
-
-        let level = column.find_level(&item3).unwrap();
-        let column_width = Column::find_width(&item3, level);
-
-        let expected_width =
-            Column::indent(2).len()
-                + item1.name.len()
-                + Column::PADDING.len();
-        assert_eq!(expected_width, column_width);
-    }
 
     #[test]
     fn determine_column_width_as_max_entry_width() {
@@ -145,9 +93,9 @@ mod tests {
     }
 
     fn calculate_max_width_of_items(item1: &ViewItem, item2: &ViewItem, item3: &ViewItem, column: Column) -> usize {
-        let widths = vec!(Column::find_width(&item1, column.find_level(&item1).unwrap()),
-                          Column::find_width(&item2, column.find_level(&item2).unwrap()),
-                          Column::find_width(&item3, column.find_level(&item3).unwrap()));
+        let widths = vec!(item1.find_width(column.find_level(&item1).unwrap()),
+                          item2.find_width(column.find_level(&item2).unwrap()),
+                          item3.find_width(column.find_level(&item3).unwrap()));
         let expected_width = *widths.iter().max().unwrap();
         expected_width
     }
@@ -162,7 +110,6 @@ mod tests {
 
         (item1, item2, item3)
     }
-
 
 
     #[test]

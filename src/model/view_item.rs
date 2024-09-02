@@ -1,5 +1,6 @@
 use std::vec::IntoIter;
 use uuid::Uuid;
+use crate::view::Column;
 
 #[derive(Debug, Clone)]
 pub struct ViewItem {
@@ -66,6 +67,16 @@ impl ViewItem {
             items.extend(item.flatten());
         }
         items
+    }
+
+    pub fn find_width(&self, level: usize) -> usize {
+        if self.name.len() > Column::MAX_COLUMN_WIDTH {
+            Column::MAX_COLUMN_WIDTH
+        } else if self.name.len() < Column::MIN_COLUMN_WIDTH {
+            Column::MIN_COLUMN_WIDTH
+        } else {
+            Column::indent(level).len() + self.name.len() + Column::PADDING.len()
+        }
     }
 }
 
@@ -242,5 +253,59 @@ mod tests {
         let flat_items : Vec<&ViewItem> = item.flatten();
 
         assert_eq!(vec!(&item, &child1, &grandchild, &child2), flat_items);
+    }
+
+    #[test]
+    fn determines_width_of_tiny_column_to_be_min() {
+        let item1 = ViewItem::new("I1".to_string());
+
+        let column_width = item1.find_width(0);
+
+        assert_eq!(Column::MIN_COLUMN_WIDTH, column_width);
+    }
+
+    #[test]
+    fn determines_width_of_huge_column_to_be_max() {
+        let item1 = ViewItem::new("::ITEM WITH A REALLY LONG NAME THAT IS LONGER THAN THE MAX COLUMN WIDTH::".to_string());
+
+        let column_width = item1.find_width(0);
+
+        assert_eq!(Column::MAX_COLUMN_WIDTH, column_width);
+    }
+
+    #[test]
+    fn determines_width_to_be_length_plus_padding() {
+        let item1 = ViewItem::new("::ITEM WITH MEDIUM LENGTH::".to_string());
+
+        let column_width = item1.find_width(0);
+
+        let expected_width = item1.name.len() + Column::PADDING.len();
+        assert_eq!(expected_width, column_width);
+    }
+
+    #[test]
+    fn determines_width_to_increase_by_indent_per_level() {
+        let (item1, item2, item3) = setup_3_entry_column();
+        let column = Column::new(&item1, 0);
+
+        let level = column.find_level(&item3).unwrap();
+        let column_width = item3.find_width(level);
+
+        let expected_width =
+            Column::indent(2).len()
+                + item1.name.len()
+                + Column::PADDING.len();
+        assert_eq!(expected_width, column_width);
+    }
+
+    fn setup_3_entry_column() -> (ViewItem, ViewItem, ViewItem) {
+        let mut item1 = ViewItem::new("::ITEM 1 WITH MEDIUM LENGTH::".to_string());
+        let mut item2 = ViewItem::new("::ITEM 2 WITH MEDIUM LENGTH::".to_string());
+        let item3 = ViewItem::new("::ITEM 3 WITH MEDIUM LENGTH::".to_string());
+
+        item2.add_sub_item(item3.clone());
+        item1.add_sub_item(item2.clone());
+
+        (item1, item2, item3)
     }
 }
