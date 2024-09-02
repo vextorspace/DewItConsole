@@ -23,7 +23,11 @@ impl<'a> Column<'a> {
         formatted
     }
 
-    pub fn find_total_width(&self) -> usize {
+    pub fn height(&self) -> usize {
+        return self.iter().count();
+    }
+
+    pub fn width(&self) -> usize {
         let mut max_width = 0;
 
         for item in self.iter() {
@@ -87,7 +91,7 @@ mod tests {
         let (item1, item2, item3) = setup_3_entry_column();
         let column = Column::new(&item1, 0);
 
-        let column_width = column.find_total_width();
+        let column_width = column.width();
         let expected_width = calculate_max_width_of_items(&item1, &item2, &item3, column);
         assert_eq!(expected_width, column_width);
     }
@@ -181,6 +185,21 @@ mod tests {
         level = column.find_level(&grandchild);
 
         assert_eq!(Some(2), level);
+    }
+
+    #[test]
+    fn height_of_on_liner_column() {
+        let mut item = ViewItem::new("::ANY::".to_string());
+        let mut child1 = ViewItem::new("::ANY::".to_string());
+        let grandchild = ViewItem::new("::ANY::".to_string());
+        let child2 = ViewItem::new("::ANY::".to_string());
+        child1.add_sub_item(grandchild.clone());
+        item.add_sub_item(child1.clone());
+        item.add_sub_item(child2.clone());
+        let column = Column::new(&item, 0);
+
+        let height = column.height();
+        assert_eq!(4, height);
     }
 }
 
