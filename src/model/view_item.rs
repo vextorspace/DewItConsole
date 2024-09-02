@@ -78,6 +78,10 @@ impl ViewItem {
             Column::indent(level).len() + self.name.len() + Column::PADDING.len()
         }
     }
+
+    pub fn text_height(&self) -> usize {
+       self.name.lines().count()
+    }
 }
 
 impl PartialEq for ViewItem {
@@ -307,5 +311,11 @@ mod tests {
         item1.add_sub_item(item2.clone());
 
         (item1, item2, item3)
+    }
+    
+    fn height_is_number_of_lines() {
+        let item = ViewItem::new("::HAS\nTHREE\nLINES::".to_string());
+        
+        assert_eq!(3, item.text_height());
     }
 }

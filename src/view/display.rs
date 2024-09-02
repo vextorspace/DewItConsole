@@ -33,7 +33,8 @@ impl<'a> Display<'a> {
     }
 
     pub fn write_column(&self, column: &Column) -> Result<(), io::Error> {
-        todo!()
+
+        unimplemented!("Write the column to the console")
     }
 
     fn append_item_ending(&mut self, loop_size: usize, index: usize) -> Result<(), Error> {

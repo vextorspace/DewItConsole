@@ -201,5 +201,20 @@ mod tests {
         let height = column.height();
         assert_eq!(4, height);
     }
+
+    #[test]
+    fn height_of_on_multi_line_liner_column() {
+        let mut item = ViewItem::new("::item\nover 2 columns::".to_string());
+        let mut child1 = ViewItem::new("::ANY::".to_string());
+        let grandchild = ViewItem::new("::ANY::".to_string());
+        let child2 = ViewItem::new("::ANY::".to_string());
+        child1.add_sub_item(grandchild.clone());
+        item.add_sub_item(child1.clone());
+        item.add_sub_item(child2.clone());
+        let column = Column::new(&item, 0);
+
+        let height: usize = column.iter().map(|item| item.text_height()).sum();
+        assert_eq!(5, height);
+    }
 }
 
